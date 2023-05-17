@@ -1,9 +1,6 @@
 package com.skitbet.prison;
 
-import com.jonahseguin.drink.CommandService;
-import com.jonahseguin.drink.Drink;
 import com.skitbet.prison.commands.MineCommands;
-import com.skitbet.prison.commands.provider.MineProvider;
 import com.skitbet.prison.listeners.PlayerListeners;
 import com.skitbet.prison.mine.Mine;
 import com.skitbet.prison.mine.MineManager;
@@ -22,10 +19,7 @@ public class PrisonPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
 
-        CommandService commandService = Drink.get(this);
-        commandService.bind(Mine.class).toProvider(new MineProvider());
-        commandService.register(new MineCommands(), "mine");
-        commandService.registerCommands();
+        getCommand("mine").setExecutor(new MineCommands());
     }
 
     @Override

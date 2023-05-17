@@ -8,10 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class MineManager {
 
@@ -22,6 +19,9 @@ public class MineManager {
         Mine mine = new Mine(name, player.getWorld().getName());
         playersInEdit.put(player.getUniqueId(), mine);
         return mine;
+    }
+    public Optional<Mine> getMine(String name) {
+        return this.mines.stream().filter(mine -> mine.getName().equalsIgnoreCase(name)).findFirst();
     }
 
 
