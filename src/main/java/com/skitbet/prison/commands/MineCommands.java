@@ -24,7 +24,6 @@ public class MineCommands implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             sender.sendMessage("§4✕ §cYou need to specify a argument.");
-
             return true;
         }
 

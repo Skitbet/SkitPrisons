@@ -15,6 +15,7 @@ public class PlayerListeners implements Listener {
         if (event.getItem().isSimilar(MineManager.EDIT_WAND())) {
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK:
+                    event.setCancelled(true);
                     PrisonPlugin.getInstance().getMineManager().handleSetupWand(1, event.getClickedBlock(), event.getPlayer());
                     break;
                 case RIGHT_CLICK_BLOCK:
