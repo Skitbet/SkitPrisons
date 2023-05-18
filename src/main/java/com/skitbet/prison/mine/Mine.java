@@ -1,7 +1,9 @@
 package com.skitbet.prison.mine;
 
 import com.skitbet.prison.PrisonPlugin;
-import org.bukkit.*;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 
 import java.util.HashMap;
@@ -57,13 +59,13 @@ public class Mine {
                         int finalCurrentY = currentY;
                         PrisonPlugin.getInstance().getServer().getScheduler().runTaskLater(PrisonPlugin.getInstance(), () -> {
                             Block block = world.getBlockAt(finalX, finalCurrentY, finalZ);
-                            block.setType(Material.BEDROCK);
+                            block.setType(getMaterialToPlace());
                         }, 1L);
                     }
                 }
 
                 try {
-                    Thread.sleep(1000L);
+                    Thread.sleep(1000L); // Using thread sleep because java is retard and wont wait for another bukkit runnable, also dont wanna waste threads
                     currentY++;
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -71,6 +73,14 @@ public class Mine {
             }
 
         }, 1L);
+    }
+
+    public Material getMaterialToPlace() {
+        Material mat = Material.STONE; // Stone is base material mines have
+        for (Material minesMat : matAndChanceMap.keySet()) {
+            if (shouldPlaceBlock(matAndChanceMap.get(minesMat))) mat = minesMat;
+        }
+        return mat;
     }
 
     public boolean shouldPlaceBlock(int chance) {
@@ -87,5 +97,17 @@ public class Mine {
 
     public Location getCornerTwo() {
         return cornerTwo;
+    }
+
+    public void addBlock(Material mat, int chance) {
+        matAndChanceMap.put(mat, chance);
+    }
+
+    public HashMap<Material, Integer> getMatAndChanceMap() {
+        return matAndChanceMap;
+    }
+
+    public boolean hasBlock(Material material) {
+        return matAndChanceMap.containsKey(material);
     }
 }

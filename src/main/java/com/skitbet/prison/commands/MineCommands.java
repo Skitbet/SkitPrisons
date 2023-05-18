@@ -3,6 +3,7 @@ package com.skitbet.prison.commands;
 import com.skitbet.prison.PrisonPlugin;
 import com.skitbet.prison.mine.Mine;
 import com.skitbet.prison.mine.MineManager;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -50,11 +51,7 @@ public class MineCommands implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                mineManager.createMine(name, player);
-                player.getInventory().addItem(MineManager.EDIT_WAND());
-
-                player.sendMessage("§aYou have begin the creation of the mine §e" + name);
-                player.sendMessage("§eSelect 2 corners with the wand to define where the mine should be.");
+                mineManager.begenMineCreation(name, player);
                 break;
             case "reset":
                 if (!sender.hasPermission("mine.reset")) {
@@ -74,6 +71,63 @@ public class MineCommands implements CommandExecutor, TabCompleter {
 
                 mineOptional.get().resetMine();
                 player.sendMessage("§cThe mine §e" + mineOptional.get().getName() + " is now resetting!");
+
+                break;
+            case "edit":
+                if (!sender.hasPermission("mine.edit")) {
+                    sender.sendMessage("§4✕ §cYou don't have enough permissions to use this command.");
+                    return true;
+                }
+                if (args.length < 1) {
+                    sender.sendMessage("§4✕ §cYou need to specify a name in order to reset a mine.");
+                    sender.sendMessage("§fCorrect Usage: §7/mine edit <name>");
+                    return true;
+                }
+
+                if (!mineOptional.isPresent()) {
+                    sender.sendMessage("§4✕ §cA mine with the name §e\"" + name + "\"§c does not exists.");
+                    return true;
+                }
+
+                mineManager.enterEditMode(player, mineOptional.get());
+                player.sendMessage("§cThe mine §e" + mineOptional.get().getName() + "§c is now resetting!");
+
+                break;
+            case "addblock":
+                if (!sender.hasPermission("mine.addblock")) {
+                    sender.sendMessage("§4✕ §cYou don't have enough permissions to use this command.");
+                    return true;
+                }
+                if (args.length < 3) {
+                    sender.sendMessage("§4✕ §cYou need to specify a name in order to reset a mine.");
+                    sender.sendMessage("§fCorrect Usage: §7/mine addblock <name> <type> <chance>");
+                    return true;
+                }
+
+                if (!mineOptional.isPresent()) {
+                    sender.sendMessage("§4✕ §cA mine with the name §e\"" + name + "\"§c does not exists.");
+                    return true;
+                }
+
+                Material material = Material.valueOf(args[2]);
+                if (material == null) {
+                    sender.sendMessage("§4✕ §cA block type with the name §e\"" + name + "\"§c does not exists.");
+                    return true;
+                }
+
+                Integer chance = Integer.parseInt(args[3]);
+                if (chance == null || chance >= 100 || chance <= 0) {
+                    sender.sendMessage("§4✕ §cYou must specify a chance between 1-100.");
+                    return true;
+                }
+
+                if (mineOptional.get().hasBlock(material)) {
+                    sender.sendMessage("§4✕ §cA block type with the name §e\"" + name + "\"§c has already been applied to the mine.");
+                    return true;
+                }
+
+                mineManager.addBlockToMine(mineOptional.get(), material, chance);
+                player.sendMessage("§cThe mine §e" + mineOptional.get().getName() + "§c is now resetting!");
 
                 break;
         }
