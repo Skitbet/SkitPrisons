@@ -11,17 +11,15 @@ public class PlayerListeners implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getItem() == null) return;
-        if (event.getItem().isSimilar(MineManager.EDIT_WAND())) {
-            switch (event.getAction()) {
-                case LEFT_CLICK_BLOCK:
-                    event.setCancelled(true);
-                    PrisonPlugin.getInstance().getMineManager().handleSetupWand(1, event.getClickedBlock(), event.getPlayer());
-                    break;
-                case RIGHT_CLICK_BLOCK:
-                    PrisonPlugin.getInstance().getMineManager().handleSetupWand(2, event.getClickedBlock(), event.getPlayer());
-            }
+        if (event.getItem() == null || !event.getItem().isSimilar(MineManager.EDIT_WAND)) {
+            return;
+        }
+
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            event.setCancelled(true);
+            PrisonPlugin.getInstance().getMineManager().handleSetupWand(1, event.getClickedBlock(), event.getPlayer());
+        } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            PrisonPlugin.getInstance().getMineManager().handleSetupWand(2, event.getClickedBlock(), event.getPlayer());
         }
     }
-
 }

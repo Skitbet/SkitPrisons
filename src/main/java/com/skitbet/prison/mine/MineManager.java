@@ -10,76 +10,105 @@ import java.util.*;
 
 public class MineManager {
 
-    private HashMap<UUID, Mine> playersInEdit = new HashMap<>();
-    private List<Mine> mines = new ArrayList<>();
+    // The special wand used for editing mines
+    public static final ItemStack EDIT_WAND = createEditWand();
 
-    public Mine begenMineCreation(String name, Player player) {
+    // Maps players to the mines they're currently editing
+    private final Map<UUID, Mine> editingPlayers = new HashMap<>();
+    // Holds all the mines in the world
+    private final List<Mine> mines = new ArrayList<>();
+
+    // Start the creation of a new mine and give the player the wand
+    public Mine startMineCreation(String name, Player player) {
         Mine mine = new Mine(name, player.getWorld().getName());
-        playersInEdit.put(player.getUniqueId(), mine);
+        editingPlayers.put(player.getUniqueId(), mine);
 
-        // Give wand to player
-        player.getInventory().addItem(MineManager.EDIT_WAND());
-        player.sendMessage("§aYou have begin the creation of the mine §e" + name);
-        player.sendMessage("§aSelect 2 corners with the wand to define where the mine should be.");
+        player.getInventory().addItem(createEditWand());
+        player.sendMessage("§aMine creation started: §e" + name);
+        player.sendMessage("§aSelect 2 corners with the wand to define the mine area.");
 
         return mine;
     }
 
+    // Switch a player to edit mode for an existing mine
     public void enterEditMode(Player player, Mine mine) {
+        if (mine == null) {
+            player.sendMessage("§cMine not found!");
+            return;
+        }
+
+        // Remove the mine from the list, start editing it
         mines.remove(mine);
-        playersInEdit.put(player.getUniqueId(), mine);
-        player.getInventory().addItem(MineManager.EDIT_WAND());
-        player.sendMessage("§aYou have entered edit mode for the mine §e" + mine.getName() + "§a. The mine will not be active until 2 corners are set again.");
-        player.sendMessage("§aSelect 2 corners with the wand to define where the mine should be.");
+        editingPlayers.put(player.getUniqueId(), mine);
+
+        player.getInventory().addItem(createEditWand());
+        player.sendMessage("§aEdit mode activated for mine: §e" + mine.getName());
+        player.sendMessage("§aSelect 2 corners with the wand to redefine the mine area.");
     }
 
+    // Add a block to the mine with a specific chance of appearing
     public void addBlockToMine(Mine mine, Material material, int chance) {
+        if (mine == null) return;
         mine.addBlock(material, chance);
     }
 
+    // Get a mine by its name (if it exists)
     public Optional<Mine> getMine(String name) {
-        return this.mines.stream().filter(mine -> mine.getName().equalsIgnoreCase(name)).findFirst();
+        return mines.stream()
+                .filter(mine -> mine.getName().equalsIgnoreCase(name))
+                .findFirst();
     }
 
-
+    // Handle the wand being used on a block (left click/right click)
     public void handleSetupWand(int button, Block blockClicked, Player player) {
-        Mine mine = playersInEdit.get(player.getUniqueId());
-        if (mine == null) return;
-
-        switch (button) {
-            case 1:
-                mine.setCornerOne(blockClicked.getLocation());
-                player.sendMessage("§aCorner 1 has been set for the mine §e" + mine.getName());
-                break;
-            case 2:
-                mine.setCornerTwo(blockClicked.getLocation());
-                player.sendMessage("§aCorner 2 has been set for the mine §e" + mine.getName());
+        Mine mine = editingPlayers.get(player.getUniqueId());
+        if (mine == null) {
+            player.sendMessage("§cYou are not editing any mine!");
+            return;
         }
 
+        if (blockClicked == null) {
+            player.sendMessage("§cInvalid block selection.");
+            return;
+        }
+
+        // Set corners for the mine based on button pressed (left/right click)
+        switch (button) {
+            case 1 -> {
+                mine.setCornerOne(blockClicked.getLocation());
+                player.sendMessage("§aCorner 1 set for mine: §e" + mine.getName());
+            }
+            case 2 -> {
+                mine.setCornerTwo(blockClicked.getLocation());
+                player.sendMessage("§aCorner 2 set for mine: §e" + mine.getName());
+            }
+            default -> player.sendMessage("§cInvalid button! Use left or right click.");
+        }
+
+        // Once both corners are set, finalize the mine
         if (mine.getCornerOne() != null && mine.getCornerTwo() != null) {
             mines.add(mine);
-            playersInEdit.remove(player.getUniqueId());
-            player.getInventory().remove(player.getItemInHand());
-            player.sendMessage("§eThe mine corners have been set. You can edit them by doing /mine edit!");
+            editingPlayers.remove(player.getUniqueId());
+            player.getInventory().removeItem(createEditWand());
+            player.sendMessage("§eMine corners successfully set! Use §b/mine edit §eto modify them.");
+        }
+    }
+
+    // Get a list of all the mines
+    public List<Mine> getMines() {
+        return Collections.unmodifiableList(mines);
+    }
+
+    // Create the edit wand item
+    public static ItemStack createEditWand() {
+        ItemStack wand = new ItemStack(Material.GOLD_AXE);
+        ItemMeta meta = wand.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName("§eMine Edit Wand");
+            wand.setItemMeta(meta);
         }
 
-
+        return wand;
     }
-
-    public static ItemStack EDIT_WAND() {
-        ItemStack itemStack = new ItemStack(Material.GOLD_AXE);
-        ItemMeta itemMeta = itemStack.getItemMeta();
-
-        itemMeta.setDisplayName("§eMine Edit Wand");
-
-        itemStack.setItemMeta(itemMeta);
-
-        return itemStack;
-    }
-
-    public List<Mine> getMines() {
-        return mines;
-    }
-
-
 }
